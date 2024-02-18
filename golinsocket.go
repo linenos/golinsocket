@@ -205,7 +205,7 @@ func main() {
 	client := _content.(*Linsocket)
 	defer client.Close()
 
-	// Go check out the Node.js server: https://www.npmjs.com/package/linsocket
+	// Go check out the Node.js server: ( OPEN THE readme.md FILE )
 	client.On("hello", func(Get func(int) interface{}) {
 		arg := Get(0) // "hello"
 		arg2 := Get(1) // "buirehbgjieruhbgne"
