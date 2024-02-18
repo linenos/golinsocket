@@ -65,9 +65,16 @@ func (c *WebSocketClient) Listen(messageHandler func(string)) {
 					return;
 				}
 
+				// Server closed connection
+				if (strings.Contains(easygo.ToString(err), "websocket: close")) {
+					console.Log("Linsocket: Server closed connection")
+					return;
+				}
+
+				// ~~~~~~~~~~~~~~~~~~ Reconnecting
 				reconnectAttemps ++
 				console.Log("[ Attempting to re-connect " + (easygo.ToString(reconnectAttemps) + "/" + easygo.ToString(maxReconnectAttempts)) + " ] Linsocket Crashed:", err)
-				time.Sleep(1 * time.Second)
+				time.Sleep(2 * time.Second)
 
 				dialer := websocket.Dialer{}	
 				conn, _, err := dialer.Dial(c.serverURL, c.headers)
