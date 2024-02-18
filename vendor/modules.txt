@@ -1,0 +1,12 @@
+# github.com/gofrs/uuid v4.0.0+incompatible
+## explicit
+# github.com/gomodule/redigo v1.8.4
+## explicit; go 1.14
+# github.com/googollee/go-socket.io v1.7.0
+## explicit; go 1.16
+# github.com/gorilla/websocket v1.4.2
+## explicit; go 1.12
+github.com/gorilla/websocket
+# github.com/linenos/easygo v0.0.0-20240211225753-b2e4ef5561b9
+## explicit; go 1.20
+github.com/linenos/easygo
