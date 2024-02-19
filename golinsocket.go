@@ -66,6 +66,10 @@ func (c *WebSocketClient) Listen(messageHandler func(string)) {
 				}
 
 				// Server closed connection
+				if (strings.Contains(easygo.ToString(err), "closed by the remote host")) {
+					console.Log("Linsocket: Server closed connection")
+					return;
+				}
 				if (strings.Contains(easygo.ToString(err), "websocket: close")) {
 					console.Log("Linsocket: Server closed connection")
 					return;
