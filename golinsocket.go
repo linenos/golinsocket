@@ -147,6 +147,7 @@ func Connect(url string, headers ...http.Header) interface{} {
 	// Message Handler
 	var linsocket *Linsocket;
 	var events = map[string]interface{}{}
+	var cached = map[string]interface{}{}
 
 	client.Listen(func(message string) {
 		// Websocket to Linsocket
@@ -169,6 +170,7 @@ func Connect(url string, headers ...http.Header) interface{} {
 			// Checking for existing $method
 			callback, ok := events[method.(string)].(func(func(int) interface{}))
 			if !ok {
+				cached[method.(string)] = Get
 				return
 			}
 
@@ -185,6 +187,10 @@ func Connect(url string, headers ...http.Header) interface{} {
 		},
 
 		On: func(method string, callback func(func(int) interface{})) {
+			existing, isType := cached[method].(func(index int) interface{})
+			if isType {
+				callback(existing)
+			}
 			events[method] = callback	
 		},
 		Emit: func(method string, message ...interface{}) {
