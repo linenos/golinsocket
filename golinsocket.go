@@ -190,6 +190,7 @@ func Connect(url string, headers ...http.Header) interface{} {
 			existing, isType := cached[method].(func(index int) interface{})
 			if isType {
 				callback(existing)
+				cached[method] = nil
 			}
 			events[method] = callback	
 		},
