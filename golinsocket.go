@@ -161,7 +161,7 @@ func Connect(url string, headers ...http.Header) interface{} {
 		if easygo.TypeOf(method) == "string" && easygo.TypeOf(jsonified["content"]) == "[]interface{}" {
 			content = jsonified["content"].([]interface{})
 			Get := func(index int) interface{} {
-				if len(content) >= index {
+				if len(content) > index {
 					return content[index]
 				}
 				return nil
