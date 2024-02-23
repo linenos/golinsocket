@@ -113,6 +113,7 @@ type Linsocket struct {
 	Socket *WebSocketClient
 	Close func() error
 
+	RemoveOnEvent func(method string)
 	On     func(string, func(func(int) interface{}))
 	Emit   func(method string, content ...interface{})
 }
@@ -184,6 +185,10 @@ func Connect(url string, headers ...http.Header) interface{} {
 		Socket: client,
 		Close: func() error {
 			return client.Close()
+		},
+
+		RemoveOnEvent: func(method string) {
+			events[method] = nil
 		},
 
 		On: func(method string, callback func(func(int) interface{})) {
