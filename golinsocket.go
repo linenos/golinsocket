@@ -18,6 +18,7 @@ type WebSocketClient struct {
 	conn       *websocket.Conn
 	headers    http.Header
 	serverURL  string
+	cache map[interface{}]interface{}
 }
 
 // NewWebSocketClient creates a new WebSocket client
@@ -34,6 +35,7 @@ func (c *WebSocketClient) Connect(headers http.Header) error {
 	if err != nil {
 		return fmt.Errorf("dial error: %v", err)
 	}
+	c.cache = map[interface{}]interface{}{}
 	c.conn = conn
 	c.headers = headers
 	return nil
@@ -51,7 +53,18 @@ func (c *WebSocketClient) SendMessage(message string) error {
 	return nil
 }
 
+// Handle Cache
+func (c * WebSocketClient) AddCache(index interface{}, value interface{}) {
+	c.cache[index] = value
+}
+
 // Listen listens for messages from the server and calls the provided handler function for each message
+func (c *WebSocketClient) OnClose(reason string) {
+	close, itype := c.cache["OnClose"].(func(string))
+	if itype {
+		close(reason)
+	}
+}
 func (c *WebSocketClient) Listen(messageHandler func(string)) {
 	reconnectAttemps := 0
 	maxReconnectAttempts := 50
@@ -61,17 +74,17 @@ func (c *WebSocketClient) Listen(messageHandler func(string)) {
 			_, message, err := c.conn.ReadMessage()
 			if err != nil {
 				if (reconnectAttemps >= maxReconnectAttempts) {
-					console.Log("Linsocket Crashed: Failed to reconnect after " + easygo.ToString(reconnectAttemps) + " attempts!")
+					c.OnClose("Linsocket Crashed: Failed to reconnect after " + easygo.ToString(reconnectAttemps) + " attempts!")
 					return;
 				}
 
 				// Server closed connection
 				if (strings.Contains(easygo.ToString(err), "closed by the remote host")) {
-					console.Log("Linsocket: Server closed connection")
+					c.OnClose("Linsocket: Server closed connection")
 					return;
 				}
 				if (strings.Contains(easygo.ToString(err), "websocket: close")) {
-					console.Log("Linsocket: Server closed connection")
+					c.OnClose("Linsocket: Server closed connection")
 					return;
 				}
 
@@ -112,6 +125,7 @@ var eghttp = easygo.Http{}
 type Linsocket struct {
 	Socket *WebSocketClient
 	Close func() error
+	OnClose func(func(reason string))
 
 	RemoveOnEvent func(method string)
 	On     func(string, func(func(int) interface{}))
@@ -183,6 +197,9 @@ func Connect(url string, headers ...http.Header) interface{} {
 	// Linsocket Functions
 	linsocket = &Linsocket{
 		Socket: client,
+		OnClose: func(closeEvent func(reason string)) {
+			client.AddCache("OnClose", closeEvent)
+		},
 		Close: func() error {
 			return client.Close()
 		},
@@ -212,6 +229,11 @@ func Connect(url string, headers ...http.Header) interface{} {
 
 // Example Usage:
 /*
+package main
+import (
+	"github.com/linenos/golinsocket"
+)
+
 func main() {
 	// Setting up details and initializing connection
 	server := "http://localhost:4000/customws"
@@ -220,13 +242,18 @@ func main() {
 
 	_content := Connect(server, header)
 	if easygo.TypeOf(_content) == "string" {
-		console.Log(_content)
+		fmt.Println(_content)
 		return;
 	}
 
 	// Intellisense
 	client := _content.(*Linsocket)
 	defer client.Close()
+
+    // When the websocket connection is closed
+	client.OnClose(func(reason string) {
+		fmt.Println(reason)
+	})
 
 	// Go check out the Node.js server: ( OPEN THE readme.md FILE )
 	client.On("hello", func(Get func(int) interface{}) {
