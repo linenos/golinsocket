@@ -128,7 +128,7 @@ type Linsocket struct {
 	OnClose func(func(reason string))
 
 	RemoveOnEvent func(method string)
-	On     func(string, func(func(int) interface{}))
+	On     func(string, func(Get func(int) interface{}, content []interface{}))
 	Emit   func(method string, content ...interface{})
 }
 
@@ -183,14 +183,14 @@ func Connect(url string, headers ...http.Header) interface{} {
 			}
 	
 			// Checking for existing $method
-			callback, ok := events[method.(string)].(func(func(int) interface{}))
+			callback, ok := events[method.(string)].(func(func(int) interface{}, []interface{}))
 			if !ok {
 				cached[method.(string)] = Get
 				return
 			}
 
 			// Call method
-			callback(Get)
+			callback(Get, content)
 		}
 	})
 
@@ -208,10 +208,11 @@ func Connect(url string, headers ...http.Header) interface{} {
 			events[method] = nil
 		},
 
-		On: func(method string, callback func(func(int) interface{})) {
+		On: func(method string, callback func(Get func(int) interface{}, content []interface{})) {
 			existing, isType := cached[method].(func(index int) interface{})
-			if isType {
-				callback(existing)
+			existing2, isType2 := cached[method + "_content"].([]interface{})
+			if isType && isType2 {
+				callback(existing, existing2)
 				cached[method] = nil
 			}
 			events[method] = callback	
@@ -256,10 +257,14 @@ func main() {
 	})
 
 	// Go check out the Node.js server: ( OPEN THE readme.md FILE )
-	client.On("hello", func(Get func(int) interface{}) {
+	client.On("hello", func(Get func(int) interface{}, content []interface{}) {
 		arg := Get(0) // "hello"
 		arg2 := Get(1) // "buirehbgjieruhbgne"
 		arg3 := Get(2) // "haha"
+
+		// content is the contents that the function 'Get' is indexing through
+		args := content[1:] // This gets all the arguments above argument 1, basically Get(1) and Get(2) and Get(...) -- argument 1 and over
+
 		easygo.Bun(arg, arg2, arg3) // easygo.Bun does nothing, it just removes the  "you must use this variable you defined" error
 		// ...etc
 	})
