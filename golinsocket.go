@@ -232,6 +232,8 @@ func Connect(url string, headers ...http.Header) interface{} {
 /*
 package main
 import (
+        "fmt"
+	"os/signal"
 	"github.com/linenos/golinsocket"
 )
 
