@@ -1,3 +1,4 @@
+// Added a middle man for intercepting request
 package golinsocket
 
 import (
@@ -127,6 +128,8 @@ type Linsocket struct {
 	Close func() error
 	OnClose func(func(reason string))
 
+	MiddleMan func(request []interface{}) []interface{}
+
 	RemoveOnEvent func(method string)
 	On     func(string, func(Get func(int) interface{}, content []interface{}))
 	Emit   func(method string, content ...interface{})
@@ -174,7 +177,7 @@ func Connect(url string, headers ...http.Header) interface{} {
 		var content []interface{}
 		method := jsonified["method"]
 		if easygo.TypeOf(method) == "string" && easygo.TypeOf(jsonified["content"]) == "[]interface{}" {
-			content = jsonified["content"].([]interface{})
+			content = linsocket.MiddleMan(jsonified["content"].([]interface{}))
 			Get := func(index int) interface{} {
 				if len(content) > index {
 					return content[index]
@@ -197,9 +200,16 @@ func Connect(url string, headers ...http.Header) interface{} {
 	// Linsocket Functions
 	linsocket = &Linsocket{
 		Socket: client,
+
+		// Middle man for intercepting contents of a request [ not the method, only contents ]
+		MiddleMan: func(request []interface{}) []interface{} {
+			return request
+		},
+
 		OnClose: func(closeEvent func(reason string)) {
 			client.AddCache("OnClose", closeEvent)
 		},
+
 		Close: func() error {
 			return client.Close()
 		},
