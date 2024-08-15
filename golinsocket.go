@@ -1,5 +1,4 @@
 // Added a middle man for intercepting request
-// Added params
 package golinsocket
 
 import (
@@ -68,38 +67,25 @@ func (c *WebSocketClient) OnClose(reason string) {
 	}
 }
 func (c *WebSocketClient) Listen(messageHandler func(string)) {
-	reconnectAttemps := 0
-	maxReconnectAttempts := 50
+	//reconnectAttemps := 0
+	//maxReconnectAttempts := 50
 
 	go func() {
 		for {
 			_, message, err := c.conn.ReadMessage()
 			if err != nil {
-				if (reconnectAttemps >= maxReconnectAttempts) {
-					c.OnClose("Linsocket Crashed: Failed to reconnect after " + easygo.ToString(reconnectAttemps) + " attempts!")
-					return;
-				}
-
+				err := err.Error()
 				// Server closed connection
-				if (strings.Contains(easygo.ToString(err), "closed by the remote host")) {
-					c.OnClose("Linsocket: Server closed connection")
+				if (strings.Contains(err, "closed by the remote host")) {
+					c.OnClose("Server closed connection")
 					return;
 				}
-				if (strings.Contains(easygo.ToString(err), "websocket: close")) {
-					c.OnClose("Linsocket: Server closed connection")
+				if (strings.Contains(err, "websocket: close")) {
+					c.OnClose("Server closed connection")
 					return;
 				}
-
-				// ~~~~~~~~~~~~~~~~~~ Reconnecting
-				reconnectAttemps ++
-				console.Log("[ Attempting to re-connect " + (easygo.ToString(reconnectAttemps) + "/" + easygo.ToString(maxReconnectAttempts)) + " ] Linsocket Crashed:", err)
-				time.Sleep(2 * time.Second)
-
-				dialer := websocket.Dialer{}	
-				conn, _, err := dialer.Dial(c.serverURL, c.headers)
-				if err == nil {
-					c.conn = conn
-				}
+				c.OnClose(err)
+				return;
 			}
 			messageHandler(string(message))
 		}
@@ -254,7 +240,7 @@ func main() {
 	header := http.Header{}
 	header.Add("test", "hello") // Custom Headers ( )
 
-	_content := Connect(server, "?exampleparam=3&otherparam=hello", header)
+	_content := Connect(server, header)
 	if easygo.TypeOf(_content) == "string" {
 		fmt.Println(_content)
 		return;
