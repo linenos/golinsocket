@@ -1,4 +1,5 @@
 // Added a middle man for intercepting request
+// Added params
 package golinsocket
 
 import (
@@ -136,7 +137,7 @@ type Linsocket struct {
 }
 
 // Connect initializes a Linsocket connection
-func Connect(url string, headers ...http.Header) interface{} {
+func Connect(url string, params string, headers ...http.Header) interface{} {
 	// ignore 
 	easygo.Bun(os.Chdir, os.Interrupt)
 
@@ -151,7 +152,7 @@ func Connect(url string, headers ...http.Header) interface{} {
 	}
 
 	// Predefined Variables	
-	client := NewWebSocketClient(wsURL)
+	client := NewWebSocketClient(wsURL + params)
 	err := client.Connect(func() http.Header {
 		if (len(headers) > 0) {
 			return headers[0]
@@ -253,7 +254,7 @@ func main() {
 	header := http.Header{}
 	header.Add("test", "hello") // Custom Headers ( )
 
-	_content := Connect(server, header)
+	_content := Connect(server, "?exampleparam=3&otherparam=hello", header)
 	if easygo.TypeOf(_content) == "string" {
 		fmt.Println(_content)
 		return;
