@@ -1,10 +1,10 @@
 // Added a middle man for intercepting request
+// Added param args
 package golinsocket
 
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"net/http"
 	//"os/signal" // For the example usage
