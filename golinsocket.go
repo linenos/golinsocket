@@ -1,5 +1,6 @@
 // Added a middle man for intercepting request
 // Added param args
+// Fixed bug where when internet stop, it would error
 package golinsocket
 
 import (
@@ -71,10 +72,15 @@ func (c *WebSocketClient) Listen(messageHandler func(string)) {
 	//maxReconnectAttempts := 50
 
 	go func() {
+		end := false
 		for {
+			if end {
+				return
+			}
 			_, message, err := c.conn.ReadMessage()
 			if err != nil {
 				err := err.Error()
+				end = true
 				// Server closed connection
 				if (strings.Contains(err, "closed by the remote host")) {
 					c.OnClose("Server closed connection")
@@ -87,6 +93,11 @@ func (c *WebSocketClient) Listen(messageHandler func(string)) {
 				c.OnClose(err)
 				return;
 			}
+
+			defer func() {
+				end = true
+				c.OnClose("Server closed connection")
+			}()
 			messageHandler(string(message))
 		}
 	}()
